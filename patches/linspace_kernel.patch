@@ -1,0 +1,53 @@
+diff --git a/aten/src/ATen/native/cpu/RangeFactoriesKernel.cpp b/aten/src/ATen/native/cpu/RangeFactoriesKernel.cpp
+index ee939613661..a0659263756 100644
+--- a/aten/src/ATen/native/cpu/RangeFactoriesKernel.cpp
++++ b/aten/src/ATen/native/cpu/RangeFactoriesKernel.cpp
+@@ -43,30 +43,25 @@ static void arange_kernel(TensorIterator& iter, const Scalar& scalar_start, cons
+ }
+ 
+ static void linspace_kernel(TensorIterator& iter, const Scalar& scalar_start, const Scalar& scalar_end, int64_t steps) {
+-  AT_DISPATCH_ALL_TYPES_AND_COMPLEX_AND2(kHalf, kBFloat16, iter.dtype(), "linspace_cpu", [&]() {
+-    // step should be of double type for all integral types
+-    using step_t = std::conditional_t<std::is_integral_v<scalar_t>, double, scalar_t>;
+-    const scalar_t start = scalar_start.to<scalar_t>();
+-    const scalar_t end = scalar_end.to<scalar_t>();
+-    // Cast `end` and `start` to `step_t`, since range can be larger than scalar_t for integral types
+-    const step_t step = (static_cast<step_t>(end) - static_cast<step_t>(start)) / (steps - 1);
++    double start = scalar_start.toDouble();
++    double end = scalar_end.toDouble();
++    double step = (end - start) / (steps - 1);
+     int64_t halfway = steps / 2;
+-    at::parallel_for(0, steps, internal::GRAIN_SIZE, [&](int64_t p_begin, int64_t p_end) {
+-      int64_t idx(p_begin);
+-      TensorIterator it(iter);
+-      // Remove vectorization implementation, due to the precision issue between integer and double.
+-      // Will not harm the performance.
+-      cpu_serial_kernel(
+-          it,
+-          [start, end, step, halfway, steps, &idx]() -> scalar_t {
+-            if (idx < halfway) {
+-              return start + step * (idx++);
+-            } else {
+-              return end - step * (steps - (idx++) - 1);
+-            }
+-          }, {p_begin, p_end});
+-    });
+-  });
++
++    int64_t idx = 0;
++    TensorIterator it(iter);
++    iter.for_each([&](char** data, const int64_t* strides, int64_t n) {
++      for (int64_t i = 0; i < n; ++i) {
++          double value;
++          if (idx < halfway) {
++              value = start + step * (idx++);
++          } else {
++              value = end - step * (steps - (idx++) - 1);
++          }
++
++          *(reinterpret_cast<double*>(data[0] + i * strides[0])) = value;
++      }
++    }, at::internal::GRAIN_SIZE);
+ }
+ 
+ } // anonymous namespace
