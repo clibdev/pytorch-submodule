@@ -2,6 +2,12 @@
 
 ## Instructions
 
+* Install dependencies:
+
+```shell
+sudo apt install -y g++ cmake ninja-build python3-six
+```
+
 * Clone repository:
 
 ```shell
@@ -11,7 +17,7 @@ git clone https://github.com/clibdev/pytorch-submodule.git && cd pytorch-submodu
 * Clone PyTorch
 
 ```shell
-git clone --recursive https://github.com/pytorch/pytorch.git --branch=v2.6.0
+git clone --recursive https://github.com/pytorch/pytorch.git --branch=v2.8.0
 ```
 
 * Build program:
@@ -28,7 +34,7 @@ cmake --build build -j$(nproc)
 ./build/pytorch_submodule
 ```
 
-* (Optiona) Apply patches:
+* (Optional) Apply patches:
 
 ```shell
 git apply patches/linspace_kernel.patch --directory pytorch
