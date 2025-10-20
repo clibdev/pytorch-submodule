@@ -10,6 +10,8 @@ include_directories(${CMAKE_BINARY_DIR}/aten/src)
 
 add_executable(${PROJECT_NAME} main.cpp)
 add_executable(abs_torch examples/abs/main.cpp)
+add_executable(acos_torch examples/acos/main.cpp)
 
 target_link_libraries(${PROJECT_NAME} torch)
 target_link_libraries(abs_torch torch)
+target_link_libraries(acos_torch torch)
